@@ -29,6 +29,21 @@ import sys
 WORD = "defenestration"
 
 
+def verify_entry(path: str) -> None:
+    """Re-read the entry and fail loudly unless it is exactly one word,
+    14 bytes, no trailing newline, ASCII letters only."""
+    with open(path, "rb") as f:
+        data = f.read()
+    if len(data) != 14:
+        raise SystemExit(f"self-check failed: entry is {len(data)} bytes, expected 14")
+    if data.endswith(b"\n") or data.endswith(b"\r"):
+        raise SystemExit("self-check failed: entry must not end with a newline")
+    if len(data.split()) != 1:
+        raise SystemExit("self-check failed: entry must be exactly one word")
+    if not all((65 <= b <= 90) or (97 <= b <= 122) for b in data):
+        raise SystemExit("self-check failed: entry must contain only ASCII letters")
+
+
 def main() -> int:
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
     os.makedirs(out_dir, exist_ok=True)
@@ -36,6 +51,7 @@ def main() -> int:
     # No trailing newline: the file is exactly the word, 14 bytes.
     with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(WORD)
+    verify_entry(path)
     return 0
 
 
